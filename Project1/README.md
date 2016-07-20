@@ -7,9 +7,9 @@ CSE 5343, Project 1: simpleC Scanner
 * Futher details on project: http://web.cse.ohio-state.edu/~rountev/5343/projects.html
 
 
-Commands required:
-
-* java JFlex.Main simpleC.flex
-* java java_cup.Main -interface < simpleC.cup
-* javac MyLexer.java
-* java MyLexer 1d-jacobi.c
+Steps (sample):
+* set JFLEX_HOME env variable and modify the jflex launcher accordingly
+* jflex simpleC.flex
+* java -jar "C:\Program Files\Jflex\jflex-1.6.1\lib\java-cup-11a.jar" simpleC.cup
+* javac -cp ".;C:\Program Files\Jflex\jflex-1.6.1\lib\java-cup-11a.jar" *.java
+* java -cp ".;C:\Program Files\Jflex\jflex-1.6.1\lib\java-cup-11a.jar" Scanner .\TestCases\fft3.c
