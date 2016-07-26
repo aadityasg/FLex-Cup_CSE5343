@@ -36,6 +36,54 @@ import java.math.*;
 
     return result;
   }
+  
+  private static BigDecimal hexExponentToBigDecimal(String text) {
+	BigDecimal resultP1 = new BigDecimal(0);
+	int decPointIndex = text.indexOf(".") == -1 ? text.length() : text.indexOf(".");
+	int expIndex = text.indexOf("p") == -1 ? (text.indexOf("P") == -1 ? text.length() : text.indexOf("P")) : text.indexOf("p");
+	
+	for (int i = 0; i < decPointIndex; i++) {
+      long digit  = Character.digit(text.charAt(i),16);
+	  resultP1 = resultP1.multiply(BigDecimal.valueOf(16));
+	  resultP1 = resultP1.add(BigDecimal.valueOf(digit));
+    }
+	
+	if(decPointIndex != text.length()) {
+		BigDecimal resultP2 = new BigDecimal(0);
+		for (int i = decPointIndex + 1; i < expIndex; i++) {
+		  long digit  = Character.digit(text.charAt(i),16);
+		  long divisor = 1;
+		  for(int index = decPointIndex; index < i; index++) {
+			  divisor *= 16;
+		  }
+		  
+		  BigDecimal temp = BigDecimal.valueOf(digit).divide(BigDecimal.valueOf(divisor), 10, RoundingMode.FLOOR);
+		  resultP2 = resultP2.add(temp);
+		}
+		resultP1 = resultP1.add(resultP2);
+	}
+	
+	if(expIndex != text.length()) {
+		BigDecimal multiplier = new BigDecimal(1);
+		for (int i = 0; i < getHexMultiplier(text); i++) {
+			multiplier = multiplier.multiply(BigDecimal.valueOf(2));
+		}
+		resultP1 = resultP1.multiply(multiplier);
+	}
+	
+	return resultP1;
+  }
+  
+  private static Integer getHexMultiplier(String text) {
+	int expIndex = text.indexOf("p") == -1 ? (text.indexOf("P") == -1 ? text.length() : text.indexOf("P")) : text.indexOf("p");
+	if(expIndex != text.length()) {
+		StringBuilder sb = new StringBuilder();
+		for(int index = expIndex + 1; index < text.length(); index++)
+			sb.append(text.charAt(index));
+		return Integer.parseInt(sb.toString());
+	}
+	return 1;
+  }
 %}
 
 /* Token building blocks */
@@ -95,7 +143,7 @@ DecFractionalConstant = (({Digit}+\.{Digit}*)|({Digit}*\.{Digit}+))
 DecFloatingConstant = (({DecFractionalConstant}{ExponentPart}?)|({Digit}+{ExponentPart}))
 
 HexFractionalConstant = (({HexDigit}+\.{HexDigit}*)|({HexDigit}*\.{HexDigit}+))
-HexFloatingConstant = {HexPrefix}({HexFractionalConstant}|(HexDigit)+){BinaryExponentPart}
+HexFloatingConstant = {HexPrefix}({HexFractionalConstant}|{HexDigit}+){BinaryExponentPart}
 
 %%
 
@@ -247,11 +295,8 @@ HexFloatingConstant = {HexPrefix}({HexFractionalConstant}|(HexDigit)+){BinaryExp
   
   /* TODO -> HEXADECIMAL FRACTIONAL EXPONENT HANDLING*/
   
-  /*
-  {HexFloatingConstant}                           { return symbol(FLOATING_POINT_LITERAL, new BigDecimal(yytext().substring(2,yylength()),16)); }
-  {HexFloatingConstant}{FloatingSuffix}           { return symbol(FLOATING_POINT_LITERAL, new Float(Double.longBitsToDouble(Long.parseLong(yytext().substring(2,yylength()-1),16)))); }
-  {HexFloatingConstant}{LongFloatingSuffix}       { return symbol(FLOATING_POINT_LITERAL, Double.longBitsToDouble(Long.parseLong(yytext().substring(2,yylength()-1),16))); }
-  */
+  {HexFloatingConstant}                           						{ return symbol(FLOATING_POINT_LITERAL, hexExponentToBigDecimal(yytext().substring(2,yylength()))); }
+  {HexFloatingConstant}({FloatingSuffix}|{LongFloatingSuffix})          { return symbol(FLOATING_POINT_LITERAL, hexExponentToBigDecimal(yytext().substring(2,yylength()-1))); }
   
   
   /* whitespace */

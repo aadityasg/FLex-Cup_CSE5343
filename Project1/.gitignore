@@ -2,3 +2,10 @@
 Scanner.java
 parser.java
 sym.java
+
+# Project Specification and ANSI C Specification
+*.pdf
+
+# Temp files
+
+*.*~
